@@ -30,7 +30,8 @@ public class ProgramController {
      */
     public ProgramController(ViewController viewController){
         this.viewController = viewController;
-        db = new DatabaseController("mysql.webhosting24.1blu.de", "3306", "db85565x2810214", "s85565_2810214", "locker1337SQLproggen!");
+        db = new DatabaseController("178.254.10.174", "3306", "db85565x2810214", "s85565_2810214", "locker1337SQLproggen!");
+        db.connect();
         if (db.getErrorMessage() != null) {
             System.err.println("DB-Verbindungsfehler: " + db.getErrorMessage());
         }
@@ -45,7 +46,7 @@ public class ProgramController {
 
 
 // 2. Abfrage ausführen
-        db.executeStatement("SELECT * FROM '26_ArDa'");
+        db.executeStatement("SELECT * FROM `26_ArDa`");
 
 // 3. Ergebnis auslesen
         QueryResult res = db.getCurrentQueryResult();
