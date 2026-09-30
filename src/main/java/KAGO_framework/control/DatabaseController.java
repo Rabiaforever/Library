@@ -46,7 +46,7 @@ public class DatabaseController {
         this.connectionUrl = "mysql.webhosting24.1blu.de";
         this.port = "3306";
         this.user = "s85565_2810214";
-        this.pass = "aD9%informatik";
+        this.pass = "locker1337SQLproggen!";
         this.database = "db85565x2810214";
     }
 

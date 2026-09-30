@@ -1,6 +1,8 @@
 package my_project.control;
 
+import KAGO_framework.control.DatabaseController;
 import KAGO_framework.control.ViewController;
+import KAGO_framework.model.abitur.datenbanken.mysql.QueryResult;
 import my_project.model.House;
 
 /**
@@ -18,8 +20,7 @@ public class ProgramController {
 
     // Referenzen
     private final ViewController viewController;  // diese Referenz soll auf ein Objekt der Klasse viewController zeigen. Über dieses Objekt wird das Fenster gesteuert.
-    private House firstHouse; // deklariert eine Referenz für ein Objekt der Klasse House
-
+    private DatabaseController db;
     /**
      * Konstruktor
      * Dieser legt das Objekt der Klasse ProgramController an, das den Programmfluss steuert.
@@ -29,6 +30,10 @@ public class ProgramController {
      */
     public ProgramController(ViewController viewController){
         this.viewController = viewController;
+        db = new DatabaseController("mysql.webhosting24.1blu.de", "3306", "db85565x2810214", "s85565_2810214", "locker1337SQLproggen!");
+        if (db.getErrorMessage() != null) {
+            System.err.println("DB-Verbindungsfehler: " + db.getErrorMessage());
+        }
     }
 
     /**
@@ -36,10 +41,26 @@ public class ProgramController {
      * was zu diesem Zeipunkt passieren muss.
      */
     public void startProgram() {
-        // Erstelle ein Objekt der Klasse House und initialisiere damit die Referenz house1
-        firstHouse = new House();
-        // Teile dem ViewController-Objekt mit, dass das House-Objekt gezeichnet werden soll
-        viewController.draw(firstHouse);
+        // 1. Daten einfügen
+
+
+// 2. Abfrage ausführen
+        db.executeStatement("SELECT * FROM '26_ArDa'");
+
+// 3. Ergebnis auslesen
+        QueryResult res = db.getCurrentQueryResult();
+
+        if (res != null) {
+            String[][] data = res.getData();
+            for (int i = 0; i < data.length; i++) {
+                for (int j = 0; j < data[i].length; j++) {
+                    System.out.print(data[i][j] + " ");
+                }
+                System.out.println();
+            }
+        } else {
+            System.out.println("Fehler: " + db.getErrorMessage());
+        }
     }
 
     /**
