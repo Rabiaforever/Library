@@ -8,6 +8,8 @@ public class ProgramController {
     private final ViewController viewController;
     private final DatabaseController db;
     private final Mitgliederverwaltung mitgliederverwaltung;
+    private final Buchverwaltung buchverwaltung;
+    private final Ausleihverwaltung ausleihverwaltung;
 
     public ProgramController(ViewController viewController) {
         this.viewController = viewController;
@@ -19,12 +21,30 @@ public class ProgramController {
         }
 
         mitgliederverwaltung = new Mitgliederverwaltung(db);
+        buchverwaltung = new Buchverwaltung(db);
+        ausleihverwaltung = new Ausleihverwaltung(db);
     }
 
     public void startProgram() {
+        System.out.println("\nMitglieder:");
         mitgliederverwaltung.mitgliederAnzeigen();
+
+        System.out.println("\nAlle Bücher:");
+        buchverwaltung.buecherAnzeigen();
+
+        System.out.println("\nVerfügbare Bücher:");
+        buchverwaltung.verfuegbareBuecherAnzeigen();
+
+        System.out.println("\nOffene Ausleihen:");
+        ausleihverwaltung.offeneAusleihenAnzeigen();
+
+        System.out.println("\nTitelsuche:");
+        buchverwaltung.buecherNachTitelSuchen("Test");
     }
 
     public void updateProgram(double dt) {
     }
+
+
+
 }
