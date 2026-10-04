@@ -1,5 +1,8 @@
 package my_project.view;
 
+import my_project.control.ProgramController;
+
+import javax.swing.table.DefaultTableModel;
 import javax.swing.*;
 import java.awt.*;
 
@@ -32,6 +35,45 @@ public class BibliothekPanel extends Container {
     private JTable memebrsTable;
     private JTable allLoansTable;
     private JPanel mainPanel;
+
+    public BibliothekPanel(ProgramController programController) {
+
+        userLabel.setText(programController.getCurrentUserName());
+
+        // Prüfen, ob der Benutzer Admin ist
+        boolean admin = programController.istAdmin();
+
+        // Diese Buttons sieht nur der Admin
+        addBookButton.setVisible(admin);
+        editBookButton.setVisible(admin);
+        deleteBookButton.setVisible(admin);
+
+        // Normale Mitglieder sollen die beiden Admin-Tabs nicht sehen
+        if (!admin) {
+            mainTabbedPanel.removeTabAt(3);
+            mainTabbedPanel.removeTabAt(2);
+        }
+
+        ladeBuecher(programController);
+    }
+
+    private void ladeBuecher(ProgramController programController) {
+
+        String[][] daten = programController.getBuecherDaten();
+
+        String[] spalten = {
+                "ID",
+                "Titel",
+                "ISBN",
+                "Genre",
+                "Standort"
+        };
+
+        DefaultTableModel model = new DefaultTableModel(daten, spalten);
+
+
+        booksTable.setModel(model);
+    }
 
     public JPanel getMainPanel() {
         return mainPanel;

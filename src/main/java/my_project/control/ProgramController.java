@@ -69,4 +69,20 @@ public class ProgramController {
 
         return currentUser != null;
     }
+
+    public String getCurrentUserName() {
+        if (currentUser == null) {
+            return "";
+        }
+
+        return currentUser.getVorname() + " " + currentUser.getNachname();
+    }
+
+    public boolean istAdmin() {
+        return currentUser != null && currentUser.istAdmin();
+    }
+
+    public String[][] getBuecherDaten() {
+        return buchverwaltung.buecherDatenHolen();
+    }
 }

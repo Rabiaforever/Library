@@ -20,6 +20,20 @@ public class Buchverwaltung {
         ergebnisAnzeigen(ergebnis, "Noch keine Bücher vorhanden.");
     }
 
+    public String[][] buecherDatenHolen() {
+
+        QueryResult ergebnis = abfrageAusfuehren(
+                "SELECT ID, Titel, ISBN, Genre, Standort " +
+                        "FROM `26ArDa_buecher` ORDER BY ID;"
+        );
+
+        if (ergebnis == null) {
+            return new String[0][0];
+        }
+
+        return ergebnis.getData();
+    }
+
     public void buchAnlegen(String titel, String isbn,
                             String genre, String standort) {
         if (!verbindungPruefen()) {
