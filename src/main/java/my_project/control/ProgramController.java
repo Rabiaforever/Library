@@ -15,7 +15,7 @@ public class ProgramController {
     private final Ausleihverwaltung ausleihverwaltung;
 
     private Login login;
-    private int currentUserID = -1;
+    private Mitglied currentUser;
 
     public ProgramController(ViewController viewController) {
         this.viewController = viewController;
@@ -54,16 +54,19 @@ public class ProgramController {
     }
 
     public boolean login(String name, String passwort) {
-        currentUserID = mitgliederverwaltung.anmelden(name, passwort);
-        return currentUserID > 0;
+        currentUser = mitgliederverwaltung.anmelden(name, passwort);
+        if(currentUser!= null){
+            System.out.println(currentUser.getId() + " " + currentUser.istAdmin());
+        }
+        return currentUser != null;
     }
 
     public boolean signUp(String vorname, String nachname, String email,
                           String geburtsdatum, String passwort) {
-        currentUserID = mitgliederverwaltung.mitgliedAnlegen(
+        currentUser = mitgliederverwaltung.mitgliedAnlegen(
                 vorname, nachname, email, geburtsdatum, passwort
         );
 
-        return currentUserID > 0;
+        return currentUser != null;
     }
 }

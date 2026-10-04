@@ -15,59 +15,59 @@ public class Mitgliederverwaltung {
         this.db = db;
     }
 
-    public int anmelden(String name, String passwort) {
+    public Mitglied anmelden(String name, String passwort) {
         if (name == null || name.trim().isEmpty() ||
                 passwort == null || passwort.isEmpty()) {
             System.out.println("Bitte Name und Passwort eingeben.");
-            return -1;
+            return null;
         }
 
         String hash = PasswortUtility.hashPassword(passwort);
 
         if (hash == null) {
-            return -1;
+            return null;
         }
 
         QueryResult ergebnis = abfrageAusfuehren(
-                "SELECT ID FROM `26ArDa_mitglieder` WHERE Vorname = " +
+                "SELECT ID, Vorname, Nachname, Rolle FROM `26ArDa_mitglieder` WHERE Vorname = " +
                         loginSqlWert(name.trim()) + " AND Passwort = " +
                         loginSqlWert(hash) + ";"
         );
 
         if (ergebnis == null || ergebnis.getRowCount() == 0) {
-            return -1;
+            return null;
         }
 
         if (ergebnis.getRowCount() != 1) {
             System.out.println(
                     "Anmeldung nicht eindeutig. Bitte Mitgliedsdaten prüfen."
             );
-            return -1;
+            return null;
         }
 
-        return Integer.parseInt(ergebnis.getData()[0][0]);
+        return new Mitglied(Integer.parseInt(ergebnis.getData()[0][0]), ergebnis.getData()[0][1], ergebnis.getData()[0][2],ergebnis.getData()[0][3]);
     }
 
-    public int mitgliedAnlegen(String vorname, String nachname,
+    public Mitglied mitgliedAnlegen(String vorname, String nachname,
                                String email, String geburtsdatum,
                                String passwort) {
         if (!verbindungPruefen()) {
-            return -1;
+            return null;
         }
 
         if (!mitgliedsdatenPruefen(vorname, nachname, email, geburtsdatum)) {
-            return -1;
+            return null;
         }
 
         if (passwort == null || passwort.trim().isEmpty()) {
             System.out.println("Bitte ein Passwort eingeben.");
-            return -1;
+            return null;
         }
 
         String hash = PasswortUtility.hashPassword(passwort);
 
         if (hash == null) {
-            return -1;
+            return null;
         }
 
         String sql =
@@ -83,17 +83,17 @@ public class Mitgliederverwaltung {
 
         if (db.getErrorMessage() != null) {
             System.err.println("Fehler beim Anlegen: " + db.getErrorMessage());
-            return -1;
+            return null;
         }
 
         QueryResult ergebnis = abfrageAusfuehren("SELECT LAST_INSERT_ID();");
 
         if (ergebnis == null || ergebnis.getRowCount() != 1) {
-            return -1;
+            return null;
         }
 
         System.out.println("Mitglied wurde gespeichert.");
-        return Integer.parseInt(ergebnis.getData()[0][0]);
+        return  anmelden(vorname, passwort);
     }
 
     public void mitgliederAnzeigen() {
