@@ -45,7 +45,7 @@ public class ProgramController {
         ausleihverwaltung.offeneAusleihenAnzeigen();
 
         System.out.println("\nSuchen nach:");
-        buchverwaltung.buecherSuchen("6");
+        buchverwaltung.buecherSuchen("97");
 
         SwingUtilities.invokeLater(() -> login = new Login(this));
     }
@@ -68,5 +68,11 @@ public class ProgramController {
         );
 
         return currentUser != null;
+    }
+    public void buecherSuchen(String suchtext) {
+        buchverwaltung.buecherSuchen(suchtext);
+    }
+    public void mitgliederSuchen(String suchtext) {
+        mitgliederverwaltung.mitgliederSuchen(suchtext);
     }
 }

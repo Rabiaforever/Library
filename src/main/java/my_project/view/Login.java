@@ -73,7 +73,7 @@ public class Login {
             loginError.setText("Name oder Passwort falsch");
         } else {
 
-            BibliothekPanel bibliothekPanel = new BibliothekPanel();
+            BibliothekPanel bibliothekPanel = new BibliothekPanel(programController);
 
             JFrame bibliothekFrame = new JFrame("Bibliothek");
 

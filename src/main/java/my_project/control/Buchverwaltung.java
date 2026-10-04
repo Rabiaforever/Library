@@ -155,7 +155,8 @@ public class Buchverwaltung {
                 "SELECT ID, Titel, ISBN, Genre, Standort " +
                         "FROM `26ArDa_buecher` " +
                         "WHERE Titel LIKE '%" + suchtext.trim() + "%' " +
-                        "OR ID = '" + suchtext.trim() + "';";
+                        "OR ID = '" + suchtext.trim() + "' " +
+                        "OR ISBN LIKE '%" + suchtext.trim() + "%';";
 
         QueryResult ergebnis = abfrageAusfuehren(sql);
 

@@ -420,4 +420,21 @@ public class Mitgliederverwaltung {
 
         return "CONVERT(X'" + hex + "' USING utf8mb4)";
     }
+    public void mitgliederSuchen(String suchtext) {
+        if (suchtext == null || suchtext.trim().isEmpty()) {
+            System.out.println("Bitte einen Suchtext eingeben.");
+            return;
+        }
+
+        String sql =
+                "SELECT ID, Vorname, Nachname, E-Mail, Geburtsdatum " +
+                        "FROM `26ArDa_mitglieder` " +
+                        "WHERE Vorname LIKE '%" + suchtext.trim() + "%' " +
+                        "OR ID = '" + suchtext.trim() + "' " +
+                        "OR Nachname LIKE '%" + suchtext.trim() + "%';";
+
+        QueryResult ergebnis = abfrageAusfuehren(sql);
+
+        ergebnisAnzeigen(ergebnis, "Keine passenden Bücher gefunden.");
+    }
 }
