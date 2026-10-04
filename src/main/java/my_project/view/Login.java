@@ -72,8 +72,18 @@ public class Login {
         if (!erfolgreich) {
             loginError.setText("Name oder Passwort falsch");
         } else {
-            frame.setVisible(false);
-            // TODO: Bibliotheksoberfläche öffnen.
+
+            BibliothekPanel bibliothekPanel = new BibliothekPanel();
+
+            JFrame bibliothekFrame = new JFrame("Bibliothek");
+
+            bibliothekFrame.setContentPane(bibliothekPanel.getMainPanel());
+
+            bibliothekFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            bibliothekFrame.setSize(1200, 750);
+            bibliothekFrame.setMinimumSize(new Dimension(900, 600));
+            bibliothekFrame.setLocationRelativeTo(null);
+            bibliothekFrame.setVisible(true);
         }
     }
 
