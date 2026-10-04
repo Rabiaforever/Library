@@ -3,12 +3,45 @@ package my_project.control;
 import KAGO_framework.control.DatabaseController;
 import KAGO_framework.model.abitur.datenbanken.mysql.QueryResult;
 
+import java.util.Objects;
+
 public class Mitgliederverwaltung {
 
     private final DatabaseController db;
 
     public Mitgliederverwaltung(DatabaseController db) {
         this.db = db;
+    }
+
+
+    /**
+     * Prüft, ob die Anmeldedaten stimmen und gibt die UserID zurück
+     * @param name
+     * @param passwort
+     * @return ID
+     */
+    public int anmelden(String name, String passwort){
+        if (!db.isConnected()) {
+            System.err.println("Keine Datenbankverbindung.");
+            return -1;
+        }
+
+        String hashPasswort = PasswortUtility.hashPassword(passwort);
+        System.out.println(hashPasswort);
+        System.out.println(passwort);
+        db.executeStatement("SELECT ID FROM `26ArDa_mitglieder` WHERE Vorname = '" + name + "' AND passwort = '" + hashPasswort + "'");
+
+        if (db.getErrorMessage() != null) {
+            System.err.println("SQL-Fehler: " + db.getErrorMessage());
+            return -1;
+        }
+
+        QueryResult ergebnis = db.getCurrentQueryResult();
+
+        String[][] daten = ergebnis.getData();
+        if(daten.length <= 0){return -1;}
+
+        return Integer.parseInt(daten[0][0]);
     }
 
     public void mitgliederAnzeigen() {
@@ -49,34 +82,44 @@ public class Mitgliederverwaltung {
         }
     }
 
-    public void mitgliedAnlegen(String vorname, String nachname,
-                                String email, String geburtsdatum) {
+    /**
+     * Erstellt einen neuen User und ruft anmelden() auf → gibt die userID zurück
+     * @param vorname
+     * @param nachname
+     * @param email
+     * @param geburtsdatum
+     * @param passwort
+     * @return ID
+     */
+    public int mitgliedAnlegen(String vorname, String nachname,
+                                String email, String geburtsdatum, String passwort) {
 
         if (!db.isConnected()) {
             System.err.println("Keine Datenbankverbindung.");
-            return;
+            return -1;
         }
 
         if (vorname == null || nachname == null ||
-                email == null || geburtsdatum == null) {
+                email == null || geburtsdatum == null || passwort == null) {
             System.err.println("Bitte alle Angaben übergeben.");
-            return;
+            return -1;
         }
 
         if (vorname.trim().isEmpty() || nachname.trim().isEmpty()) {
             System.err.println(
                     "Vorname und Nachname dürfen nicht leer sein."
             );
-            return;
+            return -1;
         }
 
         String sql =
                 "INSERT INTO `26ArDa_mitglieder` "
-                        + "(Vorname, Nachname, Email, Geburtsdatum) VALUES ("
+                        + "(Vorname, Nachname, Email, Geburtsdatum, Passwort) VALUES ("
                         + "'" + sqlText(vorname) + "', "
                         + "'" + sqlText(nachname) + "', "
                         + "'" + sqlText(email) + "', "
-                        + "'" + sqlText(geburtsdatum) + "');";
+                        + "'" + sqlText(geburtsdatum) + "', '"
+                        + sqlText(Objects.requireNonNull(PasswortUtility.hashPassword(passwort))) + "')";
 
         db.executeStatement(sql);
 
@@ -87,6 +130,8 @@ public class Mitgliederverwaltung {
         } else {
             System.out.println("Mitglied wurde gespeichert.");
         }
+
+        return anmelden(vorname, passwort);
     }
 
     public void mitgliedSuchen(int id) {
@@ -224,3 +269,5 @@ public class Mitgliederverwaltung {
         return text.replace("\\", "\\\\").replace("'", "''");
     }
 }
+
+
