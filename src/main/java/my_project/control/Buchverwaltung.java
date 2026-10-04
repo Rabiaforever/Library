@@ -145,21 +145,21 @@ public class Buchverwaltung {
         }
     }
 
-    public void buchSuchen(int id) {
-        if (id <= 0) {
-            System.out.println("Bitte eine positive Buch-ID angeben.");
+    public void buecherSuchen(String suchtext) {
+        if (suchtext == null || suchtext.trim().isEmpty()) {
+            System.out.println("Bitte einen Suchtext eingeben.");
             return;
         }
 
-        QueryResult ergebnis = abfrageAusfuehren(
+        String sql =
                 "SELECT ID, Titel, ISBN, Genre, Standort " +
-                        "FROM `26ArDa_buecher` WHERE ID = " + id + ";"
-        );
+                        "FROM `26ArDa_buecher` " +
+                        "WHERE Titel LIKE '%" + suchtext.trim() + "%' " +
+                        "OR ID = '" + suchtext.trim() + "';";
 
-        ergebnisAnzeigen(
-                ergebnis,
-                "Kein Buch mit der ID " + id + " gefunden."
-        );
+        QueryResult ergebnis = abfrageAusfuehren(sql);
+
+        ergebnisAnzeigen(ergebnis, "Keine passenden Bücher gefunden.");
     }
 
     public void verfuegbareBuecherAnzeigen() {

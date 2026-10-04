@@ -44,8 +44,8 @@ public class ProgramController {
         System.out.println("\nOffene Ausleihen:");
         ausleihverwaltung.offeneAusleihenAnzeigen();
 
-        System.out.println("\nTitelsuche:");
-        buchverwaltung.buecherNachTitelSuchen("Test");
+        System.out.println("\nSuchen nach:");
+        buchverwaltung.buecherSuchen("6");
 
         SwingUtilities.invokeLater(() -> login = new Login(this));
     }
