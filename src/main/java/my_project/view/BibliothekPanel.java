@@ -4,7 +4,7 @@ import my_project.control.ProgramController;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.*;
-import java.awt.*;
+        import java.awt.*;
 
 public class BibliothekPanel extends Container {
 
@@ -59,7 +59,19 @@ public class BibliothekPanel extends Container {
             mainTabbedPanel.removeTabAt(2);
         }
 
+
         ladeBuecher(programController);
+
+
+        suchenBookButton.addActionListener(e -> {
+            sucheBuecher(programController); });
+
+
+        showAllBooksButton.addActionListener(e -> {
+            ladeBuecher(programController);
+        });
+
+        searchMemberButton.addActionListener(e -> { sucheMitglieder(programController); });
     }
 
 
@@ -75,9 +87,50 @@ public class BibliothekPanel extends Container {
                 "Standort"
         };
 
-        DefaultTableModel model = new DefaultTableModel(daten, spalten);
+        DefaultTableModel model =
+                new DefaultTableModel(daten, spalten);
 
         booksTable.setModel(model);
+    }
+
+
+    private void sucheBuecher(ProgramController programController) {
+
+        String suchtext = bookSearchField.getText();
+
+        String[][] daten =
+                programController.getBuecherDaten(suchtext);
+
+        String[] spalten = {
+                "ID",
+                "Titel",
+                "ISBN",
+                "Genre",
+                "Standort"
+        };
+
+        DefaultTableModel model =
+                new DefaultTableModel(daten, spalten);
+
+        booksTable.setModel(model);
+    }
+
+    private void ladeMitglieder(ProgramController programController) {
+        String[][] daten = programController.getMitgliederDaten();
+        String[] spalten = {
+                "ID", "Vorname", "Nachname", "E-Mail", "Geburtsdatum"
+        };
+        DefaultTableModel model = new DefaultTableModel(daten, spalten);
+        memebrsTable.setModel(model);
+    }
+    private void sucheMitglieder(ProgramController programController) {
+        String suchtext = memberSearchField.getText();
+        String[][] daten = programController.getMitgliederDaten(suchtext);
+        String[] spalten = {
+                "ID", "Vorname", "Nachname", "E-Mail", "Geburtsdatum"
+        };
+        DefaultTableModel model = new DefaultTableModel(daten, spalten);
+        memebrsTable.setModel(model);
     }
 
 
@@ -85,3 +138,4 @@ public class BibliothekPanel extends Container {
         return mainPanel;
     }
 }
+

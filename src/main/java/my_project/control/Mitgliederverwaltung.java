@@ -437,4 +437,50 @@ public class Mitgliederverwaltung {
 
         ergebnisAnzeigen(ergebnis, "Keine passenden Bücher gefunden.");
     }
+
+    // Alle Mitglieder laden
+    public String[][] getMitgliederDaten() {
+
+        String sql =
+                "SELECT ID, Vorname, Nachname, Email, Geburtsdatum " +
+                        "FROM `26ArDa_mitglieder` " +
+                        "ORDER BY ID;";
+
+        QueryResult ergebnis = abfrageAusfuehren(sql);
+
+        if (ergebnis == null || ergebnis.getRowCount() == 0) {
+            return new String[0][0];
+        }
+
+        return ergebnis.getData();
+    }
+
+
+    // Mitglieder suchen
+    public String[][] getMitgliederDaten(String suchtext) {
+
+        if (suchtext == null || suchtext.trim().isEmpty()) {
+            return new String[0][0];
+        }
+
+        suchtext = suchtext.trim();
+
+        String sql =
+                "SELECT ID, Vorname, Nachname, Email, Geburtsdatum " +
+                        "FROM `26ArDa_mitglieder` " +
+                        "WHERE Vorname LIKE '%" + suchtext + "%' " +
+                        "OR Nachname LIKE '%" + suchtext + "%' " +
+                        "OR Email LIKE '%" + suchtext + "%' " +
+                        "OR ID = '" + suchtext + "' " +
+                        "ORDER BY ID;";
+
+        QueryResult ergebnis = abfrageAusfuehren(sql);
+
+        if (ergebnis == null || ergebnis.getRowCount() == 0) {
+            return new String[0][0];
+        }
+
+        return ergebnis.getData();
+    }
+
 }

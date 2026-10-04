@@ -306,4 +306,51 @@ public class Buchverwaltung {
                 .replace("\\", "\\\\")
                 .replace("'", "''") + "'";
     }
+
+    // Alle Bücher laden
+    public String[][] getBuecherDaten() {
+
+        String sql =
+                "SELECT ID, Titel, ISBN, Genre, Standort " +
+                        "FROM `26ArDa_buecher` " +
+                        "ORDER BY ID;";
+
+        QueryResult ergebnis = abfrageAusfuehren(sql);
+
+        if (ergebnis == null || ergebnis.getRowCount() == 0) {
+            return new String[0][0];
+        }
+
+        return ergebnis.getData();
+    }
+
+
+    // Bücher suchen
+    public String[][] getBuecherDaten(String suchtext) {
+
+        if (suchtext == null || suchtext.trim().isEmpty()) {
+            return new String[0][0];
+        }
+
+        suchtext = suchtext.trim();
+
+        String sql =
+                "SELECT ID, Titel, ISBN, Genre, Standort " +
+                        "FROM `26ArDa_buecher` " +
+                        "WHERE Titel LIKE '%" + suchtext + "%' " +
+                        "OR ISBN LIKE '%" + suchtext + "%' " +
+                        "OR Genre LIKE '%" + suchtext + "%' " +
+                        "OR Standort LIKE '%" + suchtext + "%' " +
+                        "OR ID = '" + suchtext + "' " +
+                        "ORDER BY ID;";
+
+        QueryResult ergebnis = abfrageAusfuehren(sql);
+
+        if (ergebnis == null || ergebnis.getRowCount() == 0) {
+            return new String[0][0];
+        }
+
+        return ergebnis.getData();
+    }
+
 }

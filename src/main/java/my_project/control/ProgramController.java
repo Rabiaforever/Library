@@ -83,12 +83,20 @@ public class ProgramController {
     }
 
     public String[][] getBuecherDaten() {
-        return buchverwaltung.buecherDatenHolen();
+        return buchverwaltung.getBuecherDaten();
     }
-    public void buecherSuchen(String suchtext) {
-        buchverwaltung.buecherSuchen(suchtext);
+
+    public String[][] getBuecherDaten(String suchtext) {
+        return buchverwaltung.getBuecherDaten(suchtext);
     }
-    public void mitgliederSuchen(String suchtext) {
-        mitgliederverwaltung.mitgliederSuchen(suchtext);
+
+
+    public String[][] getMitgliederDaten() {
+        return mitgliederverwaltung.getMitgliederDaten();
     }
+
+    public String[][] getMitgliederDaten(String suchtext) {
+        return mitgliederverwaltung.getMitgliederDaten(suchtext);
+    }
+
 }
