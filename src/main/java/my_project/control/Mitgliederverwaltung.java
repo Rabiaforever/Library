@@ -3,7 +3,9 @@ package my_project.control;
 import KAGO_framework.control.DatabaseController;
 import KAGO_framework.model.abitur.datenbanken.mysql.QueryResult;
 
-import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 public class Mitgliederverwaltung {
 
@@ -13,261 +15,409 @@ public class Mitgliederverwaltung {
         this.db = db;
     }
 
-
-    /**
-     * Prüft, ob die Anmeldedaten stimmen und gibt die UserID zurück
-     * @param name
-     * @param passwort
-     * @return ID
-     */
-    public int anmelden(String name, String passwort){
-        if (!db.isConnected()) {
-            System.err.println("Keine Datenbankverbindung.");
+    public int anmelden(String name, String passwort) {
+        if (name == null || name.trim().isEmpty() ||
+                passwort == null || passwort.isEmpty()) {
+            System.out.println("Bitte Name und Passwort eingeben.");
             return -1;
         }
 
-        String hashPasswort = PasswortUtility.hashPassword(passwort);
-        System.out.println(hashPasswort);
-        System.out.println(passwort);
-        db.executeStatement("SELECT ID FROM `26ArDa_mitglieder` WHERE Vorname = '" + name + "' AND passwort = '" + hashPasswort + "'");
+        String hash = PasswortUtility.hashPassword(passwort);
 
-        if (db.getErrorMessage() != null) {
-            System.err.println("SQL-Fehler: " + db.getErrorMessage());
+        if (hash == null) {
             return -1;
         }
 
-        QueryResult ergebnis = db.getCurrentQueryResult();
-
-        String[][] daten = ergebnis.getData();
-        if(daten.length <= 0){return -1;}
-
-        return Integer.parseInt(daten[0][0]);
-    }
-
-    public void mitgliederAnzeigen() {
-        if (!db.isConnected()) {
-            System.err.println("Keine Datenbankverbindung.");
-            return;
-        }
-
-        db.executeStatement(
-                "SELECT * FROM `26ArDa_mitglieder` ORDER BY ID;"
+        QueryResult ergebnis = abfrageAusfuehren(
+                "SELECT ID FROM `26ArDa_mitglieder` WHERE Vorname = " +
+                        loginSqlWert(name.trim()) + " AND Passwort = " +
+                        loginSqlWert(hash) + ";"
         );
 
-        if (db.getErrorMessage() != null) {
-            System.err.println("SQL-Fehler: " + db.getErrorMessage());
-            return;
+        if (ergebnis == null || ergebnis.getRowCount() == 0) {
+            return -1;
         }
 
-        QueryResult ergebnis = db.getCurrentQueryResult();
-
-        if (ergebnis == null) {
-            System.err.println("Kein Abfrageergebnis erhalten.");
-            return;
+        if (ergebnis.getRowCount() != 1) {
+            System.out.println(
+                    "Anmeldung nicht eindeutig. Bitte Mitgliedsdaten prüfen."
+            );
+            return -1;
         }
 
-        if (ergebnis.getRowCount() == 0) {
-            System.out.println("Noch keine Mitglieder vorhanden.");
-            return;
-        }
-
-        String[][] daten = ergebnis.getData();
-
-        for (int zeile = 0; zeile < daten.length; zeile++) {
-            for (int spalte = 0; spalte < daten[zeile].length; spalte++) {
-                System.out.print(daten[zeile][spalte] + " ");
-            }
-
-            System.out.println();
-        }
+        return Integer.parseInt(ergebnis.getData()[0][0]);
     }
 
-    /**
-     * Erstellt einen neuen User und ruft anmelden() auf → gibt die userID zurück
-     * @param vorname
-     * @param nachname
-     * @param email
-     * @param geburtsdatum
-     * @param passwort
-     * @return ID
-     */
     public int mitgliedAnlegen(String vorname, String nachname,
-                                String email, String geburtsdatum, String passwort) {
-
-        if (!db.isConnected()) {
-            System.err.println("Keine Datenbankverbindung.");
+                               String email, String geburtsdatum,
+                               String passwort) {
+        if (!verbindungPruefen()) {
             return -1;
         }
 
-        if (vorname == null || nachname == null ||
-                email == null || geburtsdatum == null || passwort == null) {
-            System.err.println("Bitte alle Angaben übergeben.");
+        if (!mitgliedsdatenPruefen(vorname, nachname, email, geburtsdatum)) {
             return -1;
         }
 
-        if (vorname.trim().isEmpty() || nachname.trim().isEmpty()) {
-            System.err.println(
-                    "Vorname und Nachname dürfen nicht leer sein."
-            );
+        if (passwort == null || passwort.trim().isEmpty()) {
+            System.out.println("Bitte ein Passwort eingeben.");
+            return -1;
+        }
+
+        String hash = PasswortUtility.hashPassword(passwort);
+
+        if (hash == null) {
             return -1;
         }
 
         String sql =
-                "INSERT INTO `26ArDa_mitglieder` "
-                        + "(Vorname, Nachname, Email, Geburtsdatum, Passwort) VALUES ("
-                        + "'" + sqlText(vorname) + "', "
-                        + "'" + sqlText(nachname) + "', "
-                        + "'" + sqlText(email) + "', "
-                        + "'" + sqlText(geburtsdatum) + "', '"
-                        + sqlText(Objects.requireNonNull(PasswortUtility.hashPassword(passwort))) + "')";
+                "INSERT INTO `26ArDa_mitglieder` " +
+                        "(Vorname, Nachname, Email, Geburtsdatum, Passwort) VALUES (" +
+                        loginSqlWert(vorname.trim()) + ", " +
+                        loginSqlWert(nachname.trim()) + ", " +
+                        loginSqlWert(email == null ? null : email.trim()) + ", " +
+                        loginSqlWert(geburtsdatum == null ? null : geburtsdatum.trim()) +
+                        ", " + loginSqlWert(hash) + ");";
 
         db.executeStatement(sql);
 
         if (db.getErrorMessage() != null) {
-            System.err.println(
-                    "Fehler beim Anlegen: " + db.getErrorMessage()
-            );
-        } else {
-            System.out.println("Mitglied wurde gespeichert.");
+            System.err.println("Fehler beim Anlegen: " + db.getErrorMessage());
+            return -1;
         }
 
-        return anmelden(vorname, passwort);
+        QueryResult ergebnis = abfrageAusfuehren("SELECT LAST_INSERT_ID();");
+
+        if (ergebnis == null || ergebnis.getRowCount() != 1) {
+            return -1;
+        }
+
+        System.out.println("Mitglied wurde gespeichert.");
+        return Integer.parseInt(ergebnis.getData()[0][0]);
+    }
+
+    public void mitgliederAnzeigen() {
+        QueryResult ergebnis = abfrageAusfuehren(
+                "SELECT ID, Vorname, Nachname, Email, Geburtsdatum " +
+                        "FROM `26ArDa_mitglieder` ORDER BY ID;"
+        );
+
+        ergebnisAnzeigen(ergebnis, "Noch keine Mitglieder vorhanden.");
+    }
+
+    public void mitgliedAnlegen(String vorname, String nachname,
+                                String email, String geburtsdatum) {
+        if (!verbindungPruefen()) {
+            return;
+        }
+
+        if (!mitgliedsdatenPruefen(vorname, nachname, email, geburtsdatum)) {
+            return;
+        }
+
+        String sql =
+                "INSERT INTO `26ArDa_mitglieder` " +
+                        "(Vorname, Nachname, Email, Geburtsdatum) VALUES (" +
+                        sqlWert(vorname) + ", " +
+                        sqlWert(nachname) + ", " +
+                        sqlWert(email) + ", " +
+                        sqlWert(geburtsdatum) + ");";
+
+        aenderungAusfuehren(sql, "Mitglied wurde gespeichert.");
+    }
+
+    public void mitgliedBearbeiten(int id, String vorname, String nachname,
+                                   String email, String geburtsdatum) {
+        if (!verbindungPruefen()) {
+            return;
+        }
+
+        if (!idPruefen(id)) {
+            return;
+        }
+
+        if (!mitgliedsdatenPruefen(vorname, nachname, email, geburtsdatum)) {
+            return;
+        }
+
+        if (!mitgliedVorhanden(id)) {
+            return;
+        }
+
+        String sql =
+                "UPDATE `26ArDa_mitglieder` SET " +
+                        "Vorname = " + sqlWert(vorname) + ", " +
+                        "Nachname = " + sqlWert(nachname) + ", " +
+                        "Email = " + sqlWert(email) + ", " +
+                        "Geburtsdatum = " + sqlWert(geburtsdatum) + " " +
+                        "WHERE ID = " + id + ";";
+
+        aenderungAusfuehren(sql, "Mitgliedsdaten wurden gespeichert.");
     }
 
     public void mitgliedSuchen(int id) {
+        if (!idPruefen(id)) {
+            return;
+        }
+
+        QueryResult ergebnis = abfrageAusfuehren(
+                "SELECT ID, Vorname, Nachname, Email, Geburtsdatum " +
+                        "FROM `26ArDa_mitglieder` WHERE ID = " + id + ";"
+        );
+
+        ergebnisAnzeigen(
+                ergebnis,
+                "Kein Mitglied mit der ID " + id + " gefunden."
+        );
+    }
+
+    public void emailAendern(int id, String neueEmail) {
+        if (!verbindungPruefen()) {
+            return;
+        }
+
+        if (!idPruefen(id) || !emailPruefen(neueEmail)) {
+            return;
+        }
+
+        if (!mitgliedVorhanden(id)) {
+            return;
+        }
+
+        String sql =
+                "UPDATE `26ArDa_mitglieder` " +
+                        "SET Email = " + sqlWert(neueEmail) +
+                        " WHERE ID = " + id + ";";
+
+        aenderungAusfuehren(sql, "E-Mail wurde gespeichert.");
+    }
+
+    public void mitgliedLoeschen(int id) {
+        if (!verbindungPruefen()) {
+            return;
+        }
+
+        if (!idPruefen(id)) {
+            return;
+        }
+
+        if (!mitgliedVorhanden(id)) {
+            return;
+        }
+
+        QueryResult ausleihen = abfrageAusfuehren(
+                "SELECT ID FROM `26ArDa_ausleihen` " +
+                        "WHERE MitgliedID = " + id + " LIMIT 1;"
+        );
+
+        if (ausleihen == null) {
+            return;
+        }
+
+        if (ausleihen.getRowCount() > 0) {
+            System.out.println(
+                    "Das Mitglied kann nicht gelöscht werden, " +
+                            "weil Ausleihen darauf verweisen."
+            );
+            return;
+        }
+
+        String sql =
+                "DELETE FROM `26ArDa_mitglieder` WHERE ID = " + id + ";";
+
+        aenderungAusfuehren(
+                sql,
+                "Mitglied mit der ID " + id + " wurde gelöscht."
+        );
+    }
+
+    private boolean verbindungPruefen() {
         if (!db.isConnected()) {
             System.err.println("Keine Datenbankverbindung.");
-            return;
+            return false;
         }
 
+        return true;
+    }
+
+    private boolean idPruefen(int id) {
         if (id <= 0) {
             System.out.println("Bitte eine positive Mitglieds-ID angeben.");
-            return;
+            return false;
         }
 
-        String sql = "SELECT * FROM `26ArDa_mitglieder` WHERE ID = "
-                + id + ";";
+        return true;
+    }
+
+    private boolean mitgliedVorhanden(int id) {
+        QueryResult ergebnis = abfrageAusfuehren(
+                "SELECT ID FROM `26ArDa_mitglieder` WHERE ID = " + id + ";"
+        );
+
+        if (ergebnis == null) {
+            return false;
+        }
+
+        if (ergebnis.getRowCount() == 0) {
+            System.out.println("Kein Mitglied mit der ID " + id + " gefunden.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean mitgliedsdatenPruefen(String vorname, String nachname,
+                                          String email, String geburtsdatum) {
+        if (vorname == null || vorname.trim().isEmpty() ||
+                nachname == null || nachname.trim().isEmpty()) {
+            System.out.println("Vorname und Nachname dürfen nicht leer sein.");
+            return false;
+        }
+
+        if (vorname.trim().length() > 50 || nachname.trim().length() > 50) {
+            System.out.println(
+                    "Vorname und Nachname dürfen jeweils höchstens 50 Zeichen haben."
+            );
+            return false;
+        }
+
+        if (!emailPruefen(email)) {
+            return false;
+        }
+
+        return geburtsdatumPruefen(geburtsdatum);
+    }
+
+    private boolean emailPruefen(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return true;
+        }
+
+        String adresse = email.trim();
+
+        if (adresse.length() > 150) {
+            System.out.println("Die E-Mail darf höchstens 150 Zeichen haben.");
+            return false;
+        }
+
+        if (!adresse.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) {
+            System.out.println(
+                    "Bitte eine E-Mail im Format name@example.com eingeben."
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean geburtsdatumPruefen(String geburtsdatum) {
+        if (geburtsdatum == null || geburtsdatum.trim().isEmpty()) {
+            return true;
+        }
+
+        String eingabe = geburtsdatum.trim();
+
+        if (!eingabe.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")) {
+            System.out.println(
+                    "Bitte das Geburtsdatum im Format JJJJ-MM-TT eingeben."
+            );
+            return false;
+        }
+
+        try {
+            LocalDate datum = LocalDate.parse(eingabe);
+
+            if (datum.getYear() < 1000 || datum.isAfter(LocalDate.now())) {
+                System.out.println(
+                        "Das Geburtsdatum muss zwischen dem Jahr 1000 und heute liegen."
+                );
+                return false;
+            }
+        } catch (DateTimeParseException e) {
+            System.out.println("Das angegebene Geburtsdatum existiert nicht.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private QueryResult abfrageAusfuehren(String sql) {
+        if (!verbindungPruefen()) {
+            return null;
+        }
 
         db.executeStatement(sql);
 
         if (db.getErrorMessage() != null) {
             System.err.println("SQL-Fehler: " + db.getErrorMessage());
-            return;
+            return null;
         }
 
         QueryResult ergebnis = db.getCurrentQueryResult();
 
         if (ergebnis == null) {
             System.err.println("Kein Abfrageergebnis erhalten.");
+        }
+
+        return ergebnis;
+    }
+
+    private void aenderungAusfuehren(String sql, String erfolgsmeldung) {
+        db.executeStatement(sql);
+
+        if (db.getErrorMessage() != null) {
+            System.err.println(
+                    "Fehler beim Speichern oder Löschen: " + db.getErrorMessage()
+            );
+        } else {
+            System.out.println(erfolgsmeldung);
+        }
+    }
+
+    private void ergebnisAnzeigen(QueryResult ergebnis, String leerMeldung) {
+        if (ergebnis == null) {
             return;
         }
 
         if (ergebnis.getRowCount() == 0) {
-            System.out.println("Kein Mitglied mit der ID " + id + " gefunden.");
+            System.out.println(leerMeldung);
             return;
         }
 
         String[][] daten = ergebnis.getData();
 
-        for (int spalte = 0; spalte < daten[0].length; spalte++) {
-            System.out.print(daten[0][spalte] + " ");
-        }
-
-        System.out.println();
-    }
-
-    public void emailAendern(int id, String neueEmail) {
-        if (!db.isConnected()) {
-            System.err.println("Keine Datenbankverbindung.");
-            return;
-        }
-
-        if (id <= 0 || neueEmail == null || neueEmail.trim().isEmpty()) {
-            System.out.println("Bitte eine gültige ID und eine E-Mail angeben.");
-            return;
-        }
-
-        db.executeStatement(
-                "SELECT ID FROM `26ArDa_mitglieder` WHERE ID = " + id + ";"
-        );
-
-        if (db.getErrorMessage() != null) {
-            System.err.println("SQL-Fehler: " + db.getErrorMessage());
-            return;
-        }
-
-        QueryResult ergebnis = db.getCurrentQueryResult();
-
-        if (ergebnis == null) {
-            System.err.println("Kein Abfrageergebnis erhalten.");
-            return;
-        }
-
-        if (ergebnis.getRowCount() == 0) {
-            System.out.println("Kein Mitglied mit der ID " + id + " gefunden.");
-            return;
-        }
-
-        String sql = "UPDATE `26ArDa_mitglieder` SET Email = '"
-                + sqlText(neueEmail.trim())
-                + "' WHERE ID = " + id + ";";
-
-        db.executeStatement(sql);
-
-        if (db.getErrorMessage() != null) {
-            System.err.println("Fehler beim Ändern: " + db.getErrorMessage());
-        } else {
-            System.out.println("E-Mail wurde gespeichert.");
+        for (int i = 0; i < daten.length; i++) {
+            System.out.println(
+                    "Mitglieds-ID: " + daten[i][0] +
+                            " | Vorname: " + daten[i][1] +
+                            " | Nachname: " + daten[i][2] +
+                            " | E-Mail: " + daten[i][3] +
+                            " | Geburtsdatum: " + daten[i][4]
+            );
         }
     }
 
-
-    public void mitgliedLoeschen(int id) {
-        if (!db.isConnected()) {
-            System.err.println("Keine Datenbankverbindung.");
-            return;
+    private String sqlWert(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return "NULL";
         }
 
-        if (id <= 0) {
-            System.out.println("Bitte eine positive Mitglieds-ID angeben.");
-            return;
-        }
-
-        db.executeStatement(
-                "SELECT ID FROM `26ArDa_mitglieder` WHERE ID = " + id + ";"
-        );
-
-        if (db.getErrorMessage() != null) {
-            System.err.println("SQL-Fehler: " + db.getErrorMessage());
-            return;
-        }
-
-        QueryResult ergebnis = db.getCurrentQueryResult();
-
-        if (ergebnis == null) {
-            System.err.println("Kein Abfrageergebnis erhalten.");
-            return;
-        }
-
-        if (ergebnis.getRowCount() == 0) {
-            System.out.println("Kein Mitglied mit der ID " + id + " gefunden.");
-            return;
-        }
-
-        db.executeStatement(
-                "DELETE FROM `26ArDa_mitglieder` WHERE ID = " + id + ";"
-        );
-
-        if (db.getErrorMessage() != null) {
-            System.err.println("Fehler beim Löschen: " + db.getErrorMessage());
-        } else {
-            System.out.println("Mitglied mit der ID " + id + " wurde gelöscht.");
-        }
+        return "'" + text.trim()
+                .replace("\\", "\\\\")
+                .replace("'", "''") + "'";
     }
 
-    private String sqlText(String text) {
-        return text.replace("\\", "\\\\").replace("'", "''");
+    private String loginSqlWert(String text) {
+        if (text == null || text.isEmpty()) {
+            return "NULL";
+        }
+
+        StringBuilder hex = new StringBuilder();
+
+        for (byte zeichen : text.getBytes(StandardCharsets.UTF_8)) {
+            hex.append(String.format("%02x", zeichen & 0xff));
+        }
+
+        return "CONVERT(X'" + hex + "' USING utf8mb4)";
     }
 }
-
-

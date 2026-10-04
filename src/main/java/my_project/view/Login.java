@@ -7,7 +7,6 @@ import java.awt.*;
 
 public class Login {
 
-
     private ProgramController programController;
 
     private JFrame frame;
@@ -20,25 +19,24 @@ public class Login {
     private JButton signUpButton;
 
     private JTextField name;
-    private JTextField passwort;
+    private JPasswordField passwort;
     private JButton LOGINButton;
     private JLabel loginError;
 
     private JTextField vorname;
     private JTextField email;
     private JTextField geburtsdatum;
-    private JTextField signUpPasswort;
-    private JTextField signUpPasswort2;
+    private JPasswordField signUpPasswort;
+    private JPasswordField signUpPasswort2;
     private JButton SIGNUPButton;
     private JTextField nachname;
     private JLabel signUpError;
 
-
     public Login(ProgramController programController) {
         this.programController = programController;
-         frame = new JFrame("Library");
-        frame.setContentPane(manager);
 
+        frame = new JFrame("Library");
+        frame.setContentPane(manager);
 
         loginButton.addActionListener(e -> showCard("login"));
         signUpButton.addActionListener(e -> showCard("signUp"));
@@ -48,9 +46,10 @@ public class Login {
         frame.setMinimumSize(new Dimension(400, 400));
         frame.pack();
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
 
         showCard("welcome");
+
+        frame.setVisible(true);
     }
 
     private void showCard(String cardName) {
@@ -58,40 +57,58 @@ public class Login {
         cl.show(manager, cardName);
     }
 
-    /**
-     * Anmelden.
-     */
-    private void login(){
-        if(name.getText() != null && passwort.getText() != null){
-            if(!programController.login(name.getText(), passwort.getText())){
-                loginError.setText("Name oder Passwort falsch");
-            }else{
-                frame.setVisible(false);
-                //TODO: Switch to UserInterface
-            }
-        }else{
+    private void login() {
+        if (name.getText().trim().isEmpty() ||
+                passwort.getPassword().length == 0) {
             loginError.setText("Bitte Name und Passwort eingeben");
+            return;
+        }
+
+        boolean erfolgreich = programController.login(
+                name.getText(),
+                new String(passwort.getPassword())
+        );
+
+        if (!erfolgreich) {
+            loginError.setText("Name oder Passwort falsch");
+        } else {
+            frame.setVisible(false);
+            // TODO: Bibliotheksoberfläche öffnen.
         }
     }
 
-    /**
-     * Neuer Account wird erstellt.
-     */
-    private void signUp(){
-        if(vorname.getText() != null && nachname.getText() != null && email.getText() != null && geburtsdatum.getText() != null
-           && signUpPasswort.getText() != null && signUpPasswort2.getText() != null){
-            if(!signUpPasswort.getText().equals(signUpPasswort2.getText())){
-                signUpError.setText("Passwort nicht identisch");
-            }else{
-              if(!programController.signUp(vorname.getText(), nachname.getText(), email.getText(), geburtsdatum.getText(), signUpPasswort.getText())){
-                  signUpError.setText("Anmeldung fehlgeschlagen");
-              }else{
-                  frame.setVisible(false);
-                //TODO: Switch to UserInterface
-              }
-            }
-        }else{
-            signUpError.setText("Bitte alles ausfüllen");
+    private void signUp() {
+        if (vorname.getText().trim().isEmpty() ||
+                nachname.getText().trim().isEmpty() ||
+                signUpPasswort.getPassword().length == 0 ||
+                signUpPasswort2.getPassword().length == 0) {
+            signUpError.setText("Bitte Namen und beide Passwörter eingeben");
+            return;
+        }
+
+        String erstesPasswort = new String(signUpPasswort.getPassword());
+        String zweitesPasswort = new String(signUpPasswort2.getPassword());
+
+        if (!erstesPasswort.equals(zweitesPasswort)) {
+            signUpError.setText("Passwörter sind nicht identisch");
+            return;
+        }
+
+        boolean erfolgreich = programController.signUp(
+                vorname.getText(),
+                nachname.getText(),
+                email.getText(),
+                geburtsdatum.getText(),
+                erstesPasswort
+        );
+
+        if (!erfolgreich) {
+            signUpError.setText(
+                    "Registrierung fehlgeschlagen. Angaben und Konsole prüfen."
+            );
+        } else {
+            frame.setVisible(false);
+            // TODO: Bibliotheksoberfläche öffnen.
         }
     }
 }

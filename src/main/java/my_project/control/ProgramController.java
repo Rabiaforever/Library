@@ -4,6 +4,8 @@ import KAGO_framework.control.DatabaseController;
 import KAGO_framework.control.ViewController;
 import my_project.view.Login;
 
+import javax.swing.SwingUtilities;
+
 public class ProgramController {
 
     private final ViewController viewController;
@@ -11,8 +13,9 @@ public class ProgramController {
     private final Mitgliederverwaltung mitgliederverwaltung;
     private final Buchverwaltung buchverwaltung;
     private final Ausleihverwaltung ausleihverwaltung;
+
     private Login login;
-    private int currentUserID;
+    private int currentUserID = -1;
 
     public ProgramController(ViewController viewController) {
         this.viewController = viewController;
@@ -26,8 +29,6 @@ public class ProgramController {
         mitgliederverwaltung = new Mitgliederverwaltung(db);
         buchverwaltung = new Buchverwaltung(db);
         ausleihverwaltung = new Ausleihverwaltung(db);
-        login = new Login(this);
-
     }
 
     public void startProgram() {
@@ -45,20 +46,24 @@ public class ProgramController {
 
         System.out.println("\nTitelsuche:");
         buchverwaltung.buecherNachTitelSuchen("Test");
+
+        SwingUtilities.invokeLater(() -> login = new Login(this));
     }
 
     public void updateProgram(double dt) {
     }
 
-    public boolean login(String name, String passwort){
+    public boolean login(String name, String passwort) {
         currentUserID = mitgliederverwaltung.anmelden(name, passwort);
-        return currentUserID >= 0;
-
+        return currentUserID > 0;
     }
 
-    public boolean signUp(String vorname, String nachname, String email, String geburtsdatum, String passwort){
-        currentUserID = mitgliederverwaltung.mitgliedAnlegen(vorname, nachname, email, geburtsdatum, passwort);
-        return currentUserID >= 0;
-    }
+    public boolean signUp(String vorname, String nachname, String email,
+                          String geburtsdatum, String passwort) {
+        currentUserID = mitgliederverwaltung.mitgliedAnlegen(
+                vorname, nachname, email, geburtsdatum, passwort
+        );
 
+        return currentUserID > 0;
+    }
 }
