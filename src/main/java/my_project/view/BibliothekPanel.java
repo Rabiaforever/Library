@@ -43,19 +43,17 @@ public class BibliothekPanel extends Container {
     private JTable allLoansTable;
     private JPanel mainPanel;
 
+
     public BibliothekPanel(ProgramController programController) {
 
         userLabel.setText(programController.getCurrentUserName());
 
-        // Prüfen, ob der Benutzer Admin ist
         boolean admin = programController.istAdmin();
 
-        // Diese Buttons sieht nur der Admin
         addBookButton.setVisible(admin);
         editBookButton.setVisible(admin);
         deleteBookButton.setVisible(admin);
 
-        // Normale Mitglieder sollen die beiden Admin-Tabs nicht sehen
         if (!admin) {
             mainTabbedPanel.removeTabAt(3);
             mainTabbedPanel.removeTabAt(2);
@@ -63,6 +61,7 @@ public class BibliothekPanel extends Container {
 
         ladeBuecher(programController);
     }
+
 
     private void ladeBuecher(ProgramController programController) {
 
@@ -78,28 +77,11 @@ public class BibliothekPanel extends Container {
 
         DefaultTableModel model = new DefaultTableModel(daten, spalten);
 
-
         booksTable.setModel(model);
     }
 
-    private ProgramController controller;
-
-    public BibliothekPanel(ProgramController controller) {
-        this.controller = controller;
-
-        suchenBookButton.addActionListener(e -> {
-            String suchtext = bookSearchField.getText();
-
-            controller.buecherSuchen(suchtext);
-        });
-        searchMemberButton.addActionListener(e -> {
-            String suchtext = memberSearchField.getText();
-
-            controller.mitgliederSuchen(suchtext); });
-    }
 
     public JPanel getMainPanel() {
         return mainPanel;
     }
-
 }
