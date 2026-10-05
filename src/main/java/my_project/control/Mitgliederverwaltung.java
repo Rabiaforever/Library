@@ -483,4 +483,33 @@ public class Mitgliederverwaltung {
         return ergebnis.getData();
     }
 
+    public void rolleAendern(int id, String rolle) {
+
+        if (!verbindungPruefen()) {
+            return;
+        }
+
+        if (!idPruefen(id)) {
+            return;
+        }
+
+        if (!mitgliedVorhanden(id)) {
+            return;
+        }
+
+        if (!rolle.equals("Admin") && !rolle.equals("Mitglied")) {
+            System.out.println("Ungültige Rolle.");
+            return;
+        }
+
+        String sql =
+                "UPDATE `26ArDa_mitglieder` " +
+                        "SET Rolle = " + sqlWert(rolle) +
+                        " WHERE ID = " + id + ";";
+
+        aenderungAusfuehren(
+                sql,
+                "Rolle wurde geändert."
+        );
+    }
 }

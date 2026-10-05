@@ -158,6 +158,7 @@ public class Ausleihverwaltung {
     }
 
     public void buchZurueckgeben(int ausleiheID) {
+
         if (!db.isConnected()) {
             System.err.println("Keine Datenbankverbindung.");
             return;
@@ -168,8 +169,10 @@ public class Ausleihverwaltung {
             return;
         }
 
+        // Prüfen, ob die Ausleihe existiert und noch offen ist
         db.executeStatement(
-                "SELECT Rueckgabedatum FROM `26ArDa_ausleihen` " +
+                "SELECT ID, Rueckgabedatum " +
+                        "FROM `26ArDa_ausleihen` " +
                         "WHERE ID = " + ausleiheID + ";"
         );
 
@@ -180,34 +183,68 @@ public class Ausleihverwaltung {
 
         QueryResult ergebnis = db.getCurrentQueryResult();
 
-        if (ergebnis == null) {
-            System.err.println("Kein Abfrageergebnis erhalten.");
-            return;
-        }
-
-        if (ergebnis.getRowCount() == 0) {
+        if (ergebnis == null || ergebnis.getRowCount() == 0) {
             System.out.println("Ausleihe wurde nicht gefunden.");
             return;
         }
 
         String[][] daten = ergebnis.getData();
 
-        if (daten[0][0] != null) {
+        if (daten[0][1] != null) {
             System.out.println("Das Buch wurde bereits zurückgegeben.");
             return;
         }
 
-        db.executeStatement(
+        // Rückgabe durchführen
+        String update =
                 "UPDATE `26ArDa_ausleihen` " +
                         "SET Rueckgabedatum = CURDATE() " +
-                        "WHERE ID = " + ausleiheID +
-                        " AND Rueckgabedatum IS NULL;"
+                        "WHERE ID = " + ausleiheID + ";";
+
+        System.out.println("UPDATE wird ausgeführt: " + update);
+
+        db.executeStatement(update);
+
+        if (db.getErrorMessage() != null) {
+            System.err.println(
+                    "Fehler bei der Rückgabe: " + db.getErrorMessage()
+            );
+            return;
+        }
+
+        // WICHTIG:
+        // Jetzt wirklich nochmal aus der Datenbank lesen
+        db.executeStatement(
+                "SELECT Rueckgabedatum " +
+                        "FROM `26ArDa_ausleihen` " +
+                        "WHERE ID = " + ausleiheID + ";"
         );
 
         if (db.getErrorMessage() != null) {
-            System.err.println("Fehler bei der Rückgabe: " + db.getErrorMessage());
+            System.err.println(
+                    "Fehler bei der Kontrolle: " + db.getErrorMessage()
+            );
+            return;
+        }
+
+        QueryResult kontrolle = db.getCurrentQueryResult();
+
+        if (kontrolle == null || kontrolle.getRowCount() == 0) {
+            System.out.println("Rückgabe konnte nicht kontrolliert werden.");
+            return;
+        }
+
+        String rueckgabedatum = kontrolle.getData()[0][0];
+
+        if (rueckgabedatum == null) {
+            System.out.println(
+                    "FEHLER: Das Rückgabedatum wurde nicht gespeichert."
+            );
         } else {
-            System.out.println("Buch wurde erfolgreich zurückgegeben.");
+            System.out.println(
+                    "Buch wurde erfolgreich zurückgegeben. Datum: "
+                            + rueckgabedatum
+            );
         }
     }
 
@@ -258,4 +295,70 @@ public class Ausleihverwaltung {
         }
     }
 
+    public String[][] meineAusleihenDatenHolen(int mitgliedID) {
+
+        if (!db.isConnected()) {
+            System.err.println("Keine Datenbankverbindung.");
+            return new String[0][0];
+        }
+
+        String sql =
+                "SELECT a.ID, b.Titel, a.Ausleihdatum, " +
+                        "a.FaelligAm, a.Rueckgabedatum " +
+                        "FROM `26ArDa_ausleihen` a " +
+                        "JOIN `26ArDa_buecher` b ON a.BuchID = b.ID " +
+                        "WHERE a.MitgliedID = " + mitgliedID + " " +
+                        "ORDER BY a.ID DESC;";
+
+        db.executeStatement(sql);
+
+        if (db.getErrorMessage() != null) {
+            System.err.println("SQL-Fehler: " + db.getErrorMessage());
+            return new String[0][0];
+        }
+
+        QueryResult ergebnis = db.getCurrentQueryResult();
+
+        if (ergebnis == null) {
+            return new String[0][0];
+        }
+
+        return ergebnis.getData();
+    }
+
+    public String[][] alleAusleihenDatenHolen(boolean nurOffene) {
+
+        if (!db.isConnected()) {
+            System.err.println("Keine Datenbankverbindung.");
+            return new String[0][0];
+        }
+
+        String sql =
+                "SELECT a.ID, m.Vorname, m.Nachname, b.Titel, " +
+                        "a.Ausleihdatum, a.FaelligAm, a.Rueckgabedatum " +
+                        "FROM `26ArDa_ausleihen` a " +
+                        "JOIN `26ArDa_mitglieder` m ON a.MitgliedID = m.ID " +
+                        "JOIN `26ArDa_buecher` b ON a.BuchID = b.ID ";
+
+        if (nurOffene) {
+            sql += "WHERE a.Rueckgabedatum IS NULL ";
+        }
+
+        sql += "ORDER BY a.ID DESC;";
+
+        db.executeStatement(sql);
+
+        if (db.getErrorMessage() != null) {
+            System.err.println("SQL-Fehler: " + db.getErrorMessage());
+            return new String[0][0];
+        }
+
+        QueryResult ergebnis = db.getCurrentQueryResult();
+
+        if (ergebnis == null) {
+            return new String[0][0];
+        }
+
+        return ergebnis.getData();
+    }
 }

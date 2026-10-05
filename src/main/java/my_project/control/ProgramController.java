@@ -99,4 +99,128 @@ public class ProgramController {
         return mitgliederverwaltung.getMitgliederDaten(suchtext);
     }
 
+    public String[][] getMeineAusleihenDaten() {
+        if (currentUser == null) {
+            return new String[0][0];
+        }
+
+        return ausleihverwaltung.meineAusleihenDatenHolen(
+                currentUser.getId()
+        );
+    }
+
+    public void buchAusleihen(int buchID) {
+        if (currentUser == null) {
+            return;
+        }
+
+        ausleihverwaltung.buchAusleihen(
+                currentUser.getId(),
+                buchID
+        );
+    }
+
+    public void buchZurueckgeben(int ausleiheID) {
+        ausleihverwaltung.buchZurueckgeben(ausleiheID);
+    }
+
+    public void buchAnlegen(String titel, String isbn,
+                            String genre, String standort) {
+
+        if (!istAdmin()) {
+            return;
+        }
+
+        buchverwaltung.buchAnlegen(titel, isbn, genre, standort);
+    }
+
+
+    public void buchBearbeiten(int id, String titel, String isbn,
+                               String genre, String standort) {
+
+        if (!istAdmin()) {
+            return;
+        }
+
+        buchverwaltung.buchBearbeiten(
+                id, titel, isbn, genre, standort
+        );
+    }
+
+
+    public void buchLoeschen(int id) {
+
+        if (!istAdmin()) {
+            return;
+        }
+
+        buchverwaltung.buchLoeschen(id);
+    }
+
+    public String[][] getAlleAusleihenDaten(boolean nurOffene) {
+
+        if (!istAdmin()) {
+            return new String[0][0];
+        }
+
+        return ausleihverwaltung.alleAusleihenDatenHolen(nurOffene);
+    }
+
+    public void logout() {
+        currentUser = null;
+    }
+
+    public void mitgliedBearbeiten(
+            int id,
+            String vorname,
+            String nachname,
+            String email,
+            String geburtsdatum) {
+
+        if (!istAdmin()) {
+            return;
+        }
+
+        mitgliederverwaltung.mitgliedBearbeiten(
+                id,
+                vorname,
+                nachname,
+                email,
+                geburtsdatum
+        );
+    }
+
+
+    public void mitgliedLoeschen(int id) {
+
+        if (!istAdmin()) {
+            return;
+        }
+
+        if (currentUser != null && currentUser.getId() == id) {
+            System.out.println(
+                    "Du kannst deinen eigenen Account nicht löschen."
+            );
+            return;
+        }
+
+        mitgliederverwaltung.mitgliedLoeschen(id);
+    }
+
+
+    public void rolleAendern(int id, String rolle) {
+
+        if (!istAdmin()) {
+            return;
+        }
+
+        if (currentUser != null && currentUser.getId() == id) {
+            System.out.println(
+                    "Du kannst deine eigene Rolle nicht ändern."
+            );
+            return;
+        }
+
+        mitgliederverwaltung.rolleAendern(id, rolle);
+    }
 }
