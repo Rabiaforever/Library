@@ -165,6 +165,16 @@ public class BibliothekPanel extends Container {
                 ladeMitglieder(programController);
             });
 
+            suchenBookButton.addActionListener(e -> {
+                sucheBuecher(programController); });
+
+
+            showAllBooksButton.addActionListener(e -> {
+                ladeBuecher(programController);
+            });
+
+            searchMemberButton.addActionListener(e -> { sucheMitglieder(programController); });
+
             deleteMemberButton.addActionListener(e -> {
 
                 int zeile = memebrsTable.getSelectedRow();
