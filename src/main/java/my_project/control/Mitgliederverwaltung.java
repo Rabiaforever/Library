@@ -72,12 +72,12 @@ public class Mitgliederverwaltung {
 
         String sql =
                 "INSERT INTO `26ArDa_mitglieder` " +
-                        "(Vorname, Nachname, Email, Geburtsdatum, Passwort) VALUES (" +
+                        "(Vorname, Nachname, Email, Geburtsdatum, Passwort, Rolle) VALUES (" +
                         loginSqlWert(vorname.trim()) + ", " +
                         loginSqlWert(nachname.trim()) + ", " +
                         loginSqlWert(email == null ? null : email.trim()) + ", " +
-                        loginSqlWert(geburtsdatum == null ? null : geburtsdatum.trim()) +
-                        ", " + loginSqlWert(hash) + ");";
+                        loginSqlWert(geburtsdatum == null ? null : geburtsdatum.trim()) + ", " +
+                        loginSqlWert(hash) + ", 'Mitglied');";
 
         db.executeStatement(sql);
 
